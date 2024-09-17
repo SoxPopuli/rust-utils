@@ -1,0 +1,12 @@
+[package]
+name = "rust-utils"
+version = "1.0.0"
+edition = "2021"
+
+[features]
+default = ["string_stream", "pipe"]
+string_stream = []
+pipe = []
+vec2d = []
+
+[dependencies]
