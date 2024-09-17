@@ -19,10 +19,26 @@ jobs:
     - name: Run tests
       run: cargo test --verbose --all-features
 
+  check_for_new_version:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        fetch-tags: true
+    - name: Get version
+      uses: SebRollen/toml-action@v1.2.0
+      id: read_toml
+      with:
+        file: 'Cargo.toml'
+        field: 'package.version'
+    - name: Check tag does not exist
+      run: "[ $(git tag --list v${{steps.read_toml.outputs.value}} | wc -l) -lt 1 ]"
   create_tag:
     runs-on: ubuntu-latest
     needs:
       - build
+      - check_for_new_version
     if: github.ref == 'refs/heads/main'
     steps:
     - uses: actions/checkout@v4
@@ -35,4 +51,4 @@ jobs:
     - name: Create tag
       run: git tag -f v${{steps.read_toml.outputs.value}}
     - name: Push tag
-      run: git push --force origin v${{steps.read_toml.outputs.value}}
+      run: git push origin v${{steps.read_toml.outputs.value}}
