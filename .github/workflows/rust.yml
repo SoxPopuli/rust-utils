@@ -25,6 +25,7 @@ jobs:
       - build
     if: github.ref == 'refs/heads/main'
     steps:
+    - uses: actions/checkout@v4
     - name: Get version
       uses: SebRollen/toml-action@v1.2.0
       id: read_toml
