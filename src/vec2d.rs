@@ -137,7 +137,7 @@ impl<T> Vec2d<T> {
     ///
     /// Panics if the new capacity exceeds `isize::MAX` *bytes*.
     pub fn push(&mut self, item: T) {
-        if self.len() == self.size() {
+        if self.len() >= self.size() {
             // Add new row
             self.height += 1;
         }
