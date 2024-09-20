@@ -79,16 +79,17 @@ where
     /// Read until new line or EOF
     pub fn next_line(&mut self) -> Option<String> {
         let mut buf = String::new();
+
         while let Some(ch) = self.next() {
             if ch == '\r' {
                 let next = self.next();
                 if next == Some('\n') {
-                    break;
+                    return Some(buf);
                 } else {
                     buf.push(ch);
                 }
             } else if ch == '\n' {
-                break;
+                return Some(buf);
             } else {
                 buf.push(ch);
             }
@@ -225,5 +226,58 @@ mod tests {
             lines,
             vec!["how", "much", "wood", "would", "a", "woodchuck", "chuck?"]
         )
+    }
+
+    // Lines iterator should read entire file
+    // even if it has blank lines in the middle
+    #[test]
+    fn lines_empty_space_test() {
+        let data = Cursor::new(
+            "Line 1
+                    Line 2
+
+                    Line 3",
+        );
+
+        let stream = StringStream::new(data);
+
+        let lines = stream
+            .lines()
+            .map(|x| x.trim().to_owned())
+            .collect::<Vec<_>>();
+
+        assert_eq!(lines, ["Line 1", "Line 2", "", "Line 3"]);
+    }
+
+    #[test]
+    fn lines_empty_string_test() {
+        let data = Cursor::new("");
+        let lines = StringStream::new(data).lines().collect::<Vec<_>>();
+
+        assert!(lines.is_empty())
+    }
+
+    #[test]
+    fn lines_trailing_space_test() {
+        #[rustfmt::skip]
+        let data =
+            "Line 1
+             Line 2 
+
+
+
+
+
+
+            ";
+
+        let stream = StringStream::new(Cursor::new(data));
+
+        let lines = stream
+            .lines()
+            .map(|x| x.trim().to_owned())
+            .collect::<Vec<_>>();
+
+        assert_eq!(lines, ["Line 1", "Line 2", "", "", "", "", "", "", ""])
     }
 }
