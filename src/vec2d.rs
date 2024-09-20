@@ -60,6 +60,14 @@ impl<T> Vec2d<T> {
         (y * self.width) + x
     }
 
+    /// Same as `get_index` but asserts x and y are in bounds
+    fn get_index_assert(&self, x: usize, y: usize) -> usize {
+        assert!(x < self.width());
+        assert!(y < self.height());
+
+        self.get_index(x, y)
+    }
+
     pub fn get_mut(&mut self, x: usize, y: usize) -> Option<&mut T> {
         let idx = self.get_index(x, y);
         self.data.get_mut(idx)
@@ -70,12 +78,18 @@ impl<T> Vec2d<T> {
         self.data.get(idx)
     }
 
-    pub fn insert(&mut self, x: usize, y: usize, val: T) -> Option<&mut T> {
-        let idx = self.get_index(x, y);
-        let elem = self.data.get_mut(idx)?;
-
-        *elem = val;
-        Some(elem)
+    /// Analogous to `Vec::insert`
+    ///
+    /// ---
+    /// Inserts an element at position `index` within the vector, shifting all
+    /// elements after it to the right.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `index > len`.
+    pub fn insert(&mut self, x: usize, y: usize, val: T) {
+        let idx = self.get_index_assert(x, y);
+        self.data.insert(idx, val)
     }
 
     pub fn from_iter<I: IntoIterator<Item = T>>(
@@ -118,6 +132,10 @@ impl<T> Vec2d<T> {
 
     /// Add item to vec
     /// Will add a new row if full
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity exceeds `isize::MAX` *bytes*.
     pub fn push(&mut self, item: T) {
         if self.len() == self.size() {
             // Add new row
@@ -155,6 +173,17 @@ where
         }
 
         Ok(this)
+    }
+
+    /// Insert element at index
+    /// Expands vector if too small
+    pub fn insert_at(&mut self, x: usize, y: usize, val: T) {
+        let idx = self.get_index(x, y);
+        while self.len() < idx {
+            self.push(T::default());
+        }
+
+        self.push(val)
     }
 }
 
@@ -217,14 +246,14 @@ impl<T> Index<usize> for Vec2d<T> {
 impl<T> Index<(usize, usize)> for Vec2d<T> {
     type Output = T;
     fn index(&self, (x, y): (usize, usize)) -> &Self::Output {
-        let index = self.get_index(x, y);
+        let index = self.get_index_assert(x, y);
         &self.data[index]
     }
 }
 
 impl<T> IndexMut<(usize, usize)> for Vec2d<T> {
     fn index_mut(&mut self, (x, y): (usize, usize)) -> &mut Self::Output {
-        let index = self.get_index(x, y);
+        let index = self.get_index_assert(x, y);
         &mut self.data[index]
     }
 }
@@ -326,5 +355,43 @@ mod tests {
         v.push(3);
         assert_eq!(v.data, vec![1, 2, 3]);
         assert_eq!(v.height, 3);
+    }
+
+    #[test]
+    fn get_index_test() {
+        use std::panic::catch_unwind;
+
+        let v: Vec2d<i32> = Vec2d {
+            width: 2,
+            height: 3,
+            data: vec![],
+        };
+
+        assert_eq!(v.get_index_assert(0, 0), 0);
+        assert_eq!(v.get_index_assert(1, 0), 1);
+        assert_eq!(v.get_index_assert(0, 1), 2);
+        assert_eq!(v.get_index_assert(1, 1), 3);
+        assert_eq!(v.get_index_assert(0, 2), 4);
+        assert_eq!(v.get_index_assert(1, 2), 5);
+
+        catch_unwind(|| v.get_index_assert(2, 2)).expect_err("Should trip assert");
+    }
+
+    #[test]
+    fn insert_at_test() {
+        let width = 2;
+        let height = 2;
+
+        #[rustfmt::skip]
+        let seq = [
+            1, 2,
+            3, 4,
+        ];
+
+        let mut v = Vec2d::from_iter(width, height, seq).unwrap();
+
+        v.insert_at(1, 2, 6);
+
+        assert_eq!(v.data, [1, 2, 3, 4, 0, 6]);
     }
 }
