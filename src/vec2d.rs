@@ -375,6 +375,7 @@ mod tests {
         assert_eq!(v.get_index_assert(1, 2), 5);
 
         catch_unwind(|| v.get_index_assert(2, 2)).expect_err("Should trip assert");
+        catch_unwind(|| v.get_index_assert(0, 3)).expect_err("Should trip assert");
     }
 
     #[test]
