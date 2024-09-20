@@ -6,3 +6,6 @@ pub mod pipe;
 
 #[cfg(feature = "vec2d")]
 pub mod vec2d;
+
+#[cfg(feature = "collect_vec")]
+pub mod collect_vec;
