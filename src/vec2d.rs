@@ -265,11 +265,11 @@ where
     /// Expands vector if too small
     pub fn insert_at(&mut self, x: usize, y: usize, val: T) {
         let idx = self.get_index(x, y);
-        while self.len() < idx {
+        while self.len() <= idx {
             self.push(T::default());
         }
 
-        self.push(val)
+        self[(x, y)] = val;
     }
 }
 
@@ -480,6 +480,10 @@ mod tests {
         v.insert_at(1, 2, 6);
 
         assert_eq!(v.data, [1, 2, 3, 4, 0, 6]);
+
+        // Insert at overrides existing
+        v.insert_at(0, 2, 5);
+        assert_eq!(v.data, [1, 2, 3, 4, 5, 6]);
     }
 
     #[test]
