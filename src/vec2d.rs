@@ -1,4 +1,3 @@
-use std::fmt::{Debug, Display, Formatter};
 use std::ops::{Index, IndexMut};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -6,80 +5,19 @@ pub enum Error {
     SliceTooLong { size: usize },
     IteratorTooLong { size: usize },
 }
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:#?}", self)
     }
 }
 impl std::error::Error for Error {}
 
-pub struct SingleColumnIter<'a, T> {
-    v: &'a Vec2d<T>,
-    col: usize,
-    row: usize,
-}
-impl<'a, T> Iterator for SingleColumnIter<'a, T> {
-    type Item = &'a T;
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.row < self.v.height {
-            let x = &self.v[(self.col, self.row)];
-            self.row += 1;
-            Some(x)
-        } else {
-            None
-        }
-    }
-}
-
-pub struct ColumnIter<'a, T> {
-    v: &'a Vec2d<T>,
-    col: usize,
-    row: usize,
-}
-
-impl<'a, T> Iterator for ColumnIter<'a, T> {
-    type Item = SingleColumnIter<'a, T>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        // Because columns are not contiguous in memory,
-        // we return a nested iterator instead of a slice
-
-        if self.col < self.v.width {
-            let iter = SingleColumnIter {
-                v: self.v,
-                col: self.col,
-                row: self.row,
-            };
-            self.col += 1;
-
-            Some(iter)
-        } else {
-            None
-        }
-    }
-}
-
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct Vec2d<T> {
     data: Vec<T>,
 
     width: usize,
     height: usize,
-}
-
-impl<T> Debug for Vec2d<T>
-where
-    T: Debug,
-{
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let rows = self.row_iter().collect::<Vec<_>>();
-
-        f.debug_struct("Vec2d")
-            .field("width", &self.width)
-            .field("height", &self.height)
-            .field("data", &rows)
-            .finish()
-    }
 }
 
 impl<T> Vec2d<T> {
@@ -138,30 +76,6 @@ impl<T> Vec2d<T> {
     pub fn get(&self, x: usize, y: usize) -> Option<&T> {
         let idx = self.get_index(x, y);
         self.data.get(idx)
-    }
-
-    pub fn row_iter(&self) -> impl Iterator<Item = &'_ [T]> {
-        let mut row = 0;
-        std::iter::from_fn(move || {
-            if row < self.height {
-                let start_index = self.get_index_assert(0, row);
-                let end_index = self.get_index_assert(self.width - 1, row);
-                let slice = &self.data[start_index..=end_index];
-
-                row += 1;
-                Some(slice)
-            } else {
-                None
-            }
-        })
-    }
-
-    pub fn column_iter(&self) -> ColumnIter<'_, T> {
-        ColumnIter {
-            v: self,
-            col: 0,
-            row: 0,
-        }
     }
 
     /// Analogous to `Vec::insert`
@@ -480,66 +394,5 @@ mod tests {
         v.insert_at(1, 2, 6);
 
         assert_eq!(v.data, [1, 2, 3, 4, 0, 6]);
-    }
-
-    #[test]
-    fn row_iter_test() {
-        let width = 2;
-        let height = 4;
-
-        #[rustfmt::skip]
-        let seq = [
-            1, 2,
-            3, 4,
-            5, 6,
-            7, 8,
-        ];
-
-        let v = Vec2d::from_iter(width, height, seq).unwrap();
-
-        assert_eq!(
-            v.row_iter().collect::<Vec<_>>(),
-            [[1, 2], [3, 4], [5, 6], [7, 8]]
-        );
-    }
-
-    #[test]
-    fn col_iter_test() {
-        let width = 2;
-        let height = 4;
-
-        #[rustfmt::skip]
-        let seq = [
-            1, 2,
-            3, 4,
-            5, 6,
-            7, 8,
-        ];
-
-        let v = Vec2d::from_iter(width, height, seq).unwrap();
-
-        let columns = v
-            .column_iter()
-            .map(|x| x.cloned().collect::<Vec<_>>())
-            .collect::<Vec<_>>();
-
-        assert_eq!(columns, [[1, 3, 5, 7], [2, 4, 6, 8]])
-    }
-
-    #[test]
-    fn debug_print_test() {
-        #[rustfmt::skip]
-        let v = Vec2d::from_iter(2, 4, [
-            1, 2, 
-            3, 4,
-            5, 6,
-            7, 8,
-        ]).unwrap();
-
-        let str = format!("{:?}", v);
-        assert_eq!(
-            str,
-            "Vec2d { width: 2, height: 4, data: [[1, 2], [3, 4], [5, 6], [7, 8]] }"
-        )
     }
 }
