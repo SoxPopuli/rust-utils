@@ -23,6 +23,10 @@ macro_rules! impl_from_bytes {
             }
         }
     };
+
+    ($($t: ty),+) => {
+        $(impl_from_bytes!($t);)+
+    }
 }
 
 pub trait FromBytes {
@@ -32,20 +36,10 @@ pub trait FromBytes {
     fn from_bytes_le(data: impl Read) -> Result<Self::Output, Self::Error>;
     fn from_bytes_be(data: impl Read) -> Result<Self::Output, Self::Error>;
 }
-impl_from_bytes!(i8);
-impl_from_bytes!(i16);
-impl_from_bytes!(i32);
-impl_from_bytes!(i64);
-impl_from_bytes!(i128);
 
-impl_from_bytes!(u8);
-impl_from_bytes!(u16);
-impl_from_bytes!(u32);
-impl_from_bytes!(u64);
-impl_from_bytes!(u128);
-
-impl_from_bytes!(f32);
-impl_from_bytes!(f64);
+impl_from_bytes!(i8, i16, i32, i64, i128);
+impl_from_bytes!(u8, u16, u32, u64, u128);
+impl_from_bytes!(f32, f64);
 
 impl FromBytes for bool {
     type Output = bool;
