@@ -197,7 +197,7 @@ mod tests {
 
     #[test]
     fn next_line_test() {
-        let with_trailing = Cursor::new("hi\nhow\r\nare\nyou?\n");
+        let with_trailing = Cursor::new("hi\nhow\r\nare\nyou?");
         let without_trailing = Cursor::new("hi\nhow\r\nare\nyou?\n");
 
         let expected = ["hi", "how", "are", "you?"];
