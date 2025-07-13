@@ -70,6 +70,31 @@ pub fn from_bytes_be<T: FromBytes>(data: impl Read) -> Result<T, T::Error> {
     T::from_bytes_be(data)
 }
 
+pub trait ReadBytes: Read {
+    fn read_ne<T>(&mut self) -> Result<T, T::Error>
+    where
+        T: FromBytes,
+    {
+        from_bytes_ne(self)
+    }
+
+    fn read_le<T>(&mut self) -> Result<T, T::Error>
+    where
+        T: FromBytes,
+    {
+        from_bytes_le(self)
+    }
+
+    fn read_be<T>(&mut self) -> Result<T, T::Error>
+    where
+        T: FromBytes,
+    {
+        from_bytes_be(self)
+    }
+}
+
+impl<T> ReadBytes for T where T: Read {}
+
 #[cfg(test)]
 mod tests {
     use crate::byte_readers::from_bytes_le;
