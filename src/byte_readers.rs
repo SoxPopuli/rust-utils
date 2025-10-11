@@ -39,6 +39,24 @@ impl_from_bytes!(i8, i16, i32, i64, i128);
 impl_from_bytes!(u8, u16, u32, u64, u128);
 impl_from_bytes!(f32, f64);
 
+impl<const N: usize> FromBytes for [u8; N] {
+    type Error = std::io::Error;
+
+    fn from_bytes_ne(mut data: impl Read) -> Result<Self, Self::Error> {
+        let mut buf = [0u8; N];
+        data.read_exact(&mut buf)
+            .map(|_| buf)
+    }
+
+    fn from_bytes_le(data: impl Read) -> Result<Self, Self::Error> {
+        Self::from_bytes_ne(data)
+    }
+
+    fn from_bytes_be(data: impl Read) -> Result<Self, Self::Error> {
+        Self::from_bytes_ne(data)
+    }
+}
+
 impl FromBytes for bool {
     type Error = std::io::Error;
 
