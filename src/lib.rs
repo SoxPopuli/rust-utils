@@ -12,3 +12,6 @@ pub mod collect_vec;
 
 #[cfg(feature = "byte_readers")]
 pub mod byte_readers;
+
+#[cfg(feature = "bit_reader")]
+pub mod bit_reader;

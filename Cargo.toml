@@ -1,6 +1,6 @@
 [package]
 name = "rust-utils"
-version = "1.9.0"
+version = "1.10.0"
 edition = "2021"
 
 [features]
@@ -10,5 +10,6 @@ string_stream = []
 pipe = []
 vec2d = []
 byte_readers = []
+bit_reader = []
 
 [dependencies]
