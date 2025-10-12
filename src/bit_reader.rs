@@ -26,11 +26,11 @@ impl BitReader {
         }
     }
 
-    pub fn bit_size(&self) -> usize {
+    pub fn bits_remaining(&self) -> usize {
         (self.data.len() * 8) - self.bit_index
     }
 
-    pub fn byte_size(&self) -> usize {
+    pub fn bytes_remaining(&self) -> usize {
         self.data.len()
     }
 
